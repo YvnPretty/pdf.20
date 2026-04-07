@@ -6,6 +6,11 @@ const { processFileToPDF, validateFile } = require('./pdfConverter');
 const app = express();
 app.use(cors());
 
+// Ruta simple para el hack de "Ping" que evite que Render se duerma
+app.get('/ping', (req, res) => {
+  res.status(200).send('pong');
+});
+
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
