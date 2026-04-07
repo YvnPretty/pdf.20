@@ -17,7 +17,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3001/api/convert`;
+      const backendUrl = "https://pdf-20.onrender.com/api/convert";
       const response = await fetch(backendUrl, {
         method: 'POST',
         body: formData,
