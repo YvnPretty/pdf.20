@@ -1,10 +1,18 @@
-import React from 'react';
-import { X, Save, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Save, RefreshCw, ExternalLink } from 'lucide-react';
 
 function PreviewModal({ isOpen, pdfBlob, fileName, onConfirm, onCancel }) {
-  if (!isOpen || !pdfBlob) return null;
+  const [objectUrl, setObjectUrl] = useState(null);
 
-  const objectUrl = URL.createObjectURL(pdfBlob);
+  useEffect(() => {
+    if (isOpen && pdfBlob) {
+      const url = URL.createObjectURL(pdfBlob);
+      setObjectUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [isOpen, pdfBlob]);
+
+  if (!isOpen || !pdfBlob || !objectUrl) return null;
 
   return (
     <div className="modal-overlay">
@@ -16,20 +24,32 @@ function PreviewModal({ isOpen, pdfBlob, fileName, onConfirm, onCancel }) {
           </button>
         </div>
         
-        <div className="modal-body">
+        <div className="modal-body" style={{ position: 'relative' }}>
           <iframe 
             src={`${objectUrl}#toolbar=0`} 
             title="PDF Preview" 
             className="pdf-preview-frame"
+            style={{ width: '100%', height: '100%', border: 'none', background: 'white' }}
           />
         </div>
 
         <div className="modal-footer">
           <p className="preview-filename">{fileName}</p>
           <div className="modal-actions">
+            <a 
+              href={objectUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-secondary"
+              style={{ textDecoration: 'none' }}
+              title="Abre el PDF en una pestaña externa para dispositivos móviles"
+            >
+              <ExternalLink size={18} />
+              Ver Completo
+            </a>
             <button className="btn btn-secondary" onClick={onCancel}>
               <RefreshCw size={18} />
-              Intentar de nuevo
+              Reintentar
             </button>
             <button className="btn btn-primary" onClick={onConfirm}>
               <Save size={18} />
