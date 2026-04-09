@@ -79,7 +79,7 @@ function App() {
     <>
       <header>
         <h1>PDFForge</h1>
-        <p className="subtitle">Conversiones precisas. PWA instalable de alta fidelidad.</p>
+        <p className="subtitle">Estamos aquí para programar y resolver.</p>
       </header>
 
       <main className="converter-container" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
