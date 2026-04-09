@@ -3,10 +3,12 @@ import localforage from 'localforage';
 import FileUploader from './components/FileUploader.jsx';
 import ToastPanel from './components/ToastPanel.jsx';
 import HistoryDashboard from './components/HistoryDashboard.jsx';
+import PreviewModal from './components/PreviewModal.jsx';
 
 function App() {
   const [toast, setToast] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [previewData, setPreviewData] = useState(null);
 
   const handleFileSelect = async (file) => {
     if (!file) return;
@@ -37,20 +39,38 @@ function App() {
           ? file.name.substring(0, file.name.lastIndexOf('.')) + '.pdf' 
           : file.name + '.pdf';
       
-      const id = 'pdf_' + Date.now();
-      await localforage.setItem(id, {
-        id,
-        name: outputName,
-        blob: blob,
-        timestamp: Date.now()
-      });
-
-      setToast({ type: 'success', title: '¡Éxito Quirúrgico!', message: 'Archivo transformado y guardado.' });
-      setRefreshTrigger(prev => prev + 1);
+      setToast(null);
+      setPreviewData({ blob, file, outputName });
       
     } catch (err) {
        setToast({ type: 'error', title: 'Regla de negocio no cumplida', message: err.message });
     }
+  };
+
+  const handleConfirmPreview = async () => {
+    if (!previewData) return;
+    
+    setToast({ type: 'uploading', title: 'Guardando...', message: previewData.outputName });
+    
+    try {
+      const id = 'pdf_' + Date.now();
+      await localforage.setItem(id, {
+        id,
+        name: previewData.outputName,
+        blob: previewData.blob,
+        timestamp: Date.now()
+      });
+
+      setToast({ type: 'success', title: '¡Éxito Quirúrgico!', message: 'Archivo guardado en el historial.' });
+      setRefreshTrigger(prev => prev + 1);
+      setPreviewData(null);
+    } catch(err) {
+      setToast({ type: 'error', title: 'Error al guardar', message: err.message });
+    }
+  };
+
+  const handleCancelPreview = () => {
+    setPreviewData(null);
   };
 
   const closeToast = () => setToast(null);
@@ -66,6 +86,14 @@ function App() {
         <FileUploader onFileSelect={handleFileSelect} />
         <HistoryDashboard refreshTrigger={refreshTrigger} />
       </main>
+
+      <PreviewModal 
+        isOpen={!!previewData}
+        pdfBlob={previewData?.blob}
+        fileName={previewData?.outputName}
+        onConfirm={handleConfirmPreview}
+        onCancel={handleCancelPreview}
+      />
 
       <ToastPanel toast={toast} onClose={closeToast} />
     </>
