@@ -33,7 +33,7 @@ function PreviewModal({ isOpen, pdfBlob, fileName, onConfirm, onCancel, onAddPag
         
         <div className="modal-body">
           <iframe 
-            src={`${objectUrl}#toolbar=0`} 
+            src={`${objectUrl}#view=FitH&toolbar=0`} 
             title="PDF Preview" 
             className="pdf-preview-frame"
           />

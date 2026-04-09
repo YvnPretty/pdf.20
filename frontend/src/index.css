@@ -253,11 +253,19 @@ h1 {
 
 .modal-body {
   flex: 1;
-  background: #f1f5f9;
+  background: #000; /* Dark background for professional focus */
+  display: flex;
 }
 
 @media (prefers-color-scheme: dark) {
-  .modal-body { background: #020617; }
+  .modal-body { background: #000; }
+}
+
+.pdf-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
 }
 
 .modal-footer {
