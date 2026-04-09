@@ -9,14 +9,22 @@ function App() {
   const [toast, setToast] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [previewData, setPreviewData] = useState(null);
+  const [draftFiles, setDraftFiles] = useState([]);
 
-  const handleFileSelect = async (file) => {
-    if (!file) return;
+  const handleFileSelect = (newFiles) => {
+    if (!newFiles || newFiles.length === 0) return;
+    const filesToConvert = [...draftFiles, ...newFiles];
+    setDraftFiles(filesToConvert);
+    convertFiles(filesToConvert);
+  };
 
-    setToast({ type: 'uploading', title: 'Convirtiendo la magia...', message: file.name });
+  const convertFiles = async (files) => {
+    setToast({ type: 'uploading', title: 'Procesando documentos...', message: `${files.length} archivo(s)` });
 
     const formData = new FormData();
-    formData.append('file', file);
+    files.forEach(file => {
+      formData.append('files', file);
+    });
 
     try {
       const backendUrl = "https://pdf-20.onrender.com/api/convert";
@@ -26,7 +34,7 @@ function App() {
       });
 
       if (!response.ok) {
-        let errorMsg = 'Error inesperado del servidor';
+        let errorMsg = 'Error en la conversión empresarial';
         try {
            const errorData = await response.json();
            errorMsg = errorData.error;
@@ -35,15 +43,15 @@ function App() {
       }
 
       const blob = await response.blob();
-      const outputName = file.name.includes('.') 
-          ? file.name.substring(0, file.name.lastIndexOf('.')) + '.pdf' 
-          : file.name + '.pdf';
+      const outputName = files.length > 1 
+          ? `${files[0].name.split('.')[0]}_compilation.pdf`
+          : files[0].name.split('.')[0] + '.pdf';
       
       setToast(null);
-      setPreviewData({ blob, file, outputName });
+      setPreviewData({ blob, files, outputName });
       
     } catch (err) {
-       setToast({ type: 'error', title: 'Regla de negocio no cumplida', message: err.message });
+       setToast({ type: 'error', title: 'Error de Procesamiento', message: err.message });
     }
   };
 
@@ -64,6 +72,7 @@ function App() {
       setToast({ type: 'success', title: '¡Éxito Quirúrgico!', message: 'Archivo guardado en el historial.' });
       setRefreshTrigger(prev => prev + 1);
       setPreviewData(null);
+      setDraftFiles([]);
     } catch(err) {
       setToast({ type: 'error', title: 'Error al guardar', message: err.message });
     }
@@ -71,6 +80,7 @@ function App() {
 
   const handleCancelPreview = () => {
     setPreviewData(null);
+    setDraftFiles([]);
   };
 
   const closeToast = () => setToast(null);
@@ -93,6 +103,7 @@ function App() {
         fileName={previewData?.outputName}
         onConfirm={handleConfirmPreview}
         onCancel={handleCancelPreview}
+        onAddPage={handleFileSelect}
       />
 
       <ToastPanel toast={toast} onClose={closeToast} />

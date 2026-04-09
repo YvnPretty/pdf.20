@@ -15,23 +15,27 @@ app.get('/ping', (req, res) => {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post('/api/convert', upload.single('file'), async (req, res) => {
+app.post('/api/convert', upload.array('files', 20), async (req, res) => {
   try {
-    if (!req.file) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No se subió ningún archivo.' });
     }
 
     // Validation Module
-    const validationError = validateFile(req.file);
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
+    for (const file of req.files) {
+      const validationError = validateFile(file);
+      if (validationError) {
+        return res.status(400).json({ error: `Error en ${file.originalname}: ${validationError}` });
+      }
     }
 
     // Conversion Module
-    const pdfBytes = await processFileToPDF(req.file);
+    const pdfBytes = await processFileToPDF(req.files);
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${req.file.originalname.split('.')[0]}.pdf"`);
+    const baseName = req.files[0].originalname.split('.')[0];
+    const finalName = req.files.length > 1 ? `${baseName}_multipage` : baseName;
+    res.setHeader('Content-Disposition', `attachment; filename="${finalName}.pdf"`);
     res.send(Buffer.from(pdfBytes));
 
   } catch (err) {

@@ -29,13 +29,13 @@ function FileUploader({ onFileSelect }) {
     setIsDragActive(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onFileSelect(e.dataTransfer.files[0]);
+      onFileSelect(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      onFileSelect(e.target.files[0]);
+      onFileSelect(Array.from(e.target.files));
     }
   };
 
@@ -54,10 +54,11 @@ function FileUploader({ onFileSelect }) {
           ref={fileInputRef} 
           onChange={handleFileInput} 
           style={{ display: 'none' }} 
+          multiple
           accept="image/png, image/jpeg, image/jpg, text/plain, .doc, .docx, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, .xls, .xlsx, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         />
         <FileUp className="drop-icon" size={64} style={{ opacity: 0.8 }} />
-        <h3 className="dropzone-text">Arrastra tu archivo aquí</h3>
+        <h3 className="dropzone-text">Seleccionar archivos</h3>
         <p className="dropzone-subtext">o haz clic para explorar en tu dispositivo</p>
         <p className="dropzone-subtext" style={{ marginTop: '1rem', fontSize: '0.8rem' }}>Soporta Imágenes, Texto, Word y Excel (Max 10MB)</p>
       </div>

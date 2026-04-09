@@ -44,25 +44,38 @@ function validateFile(file) {
   return null;
 }
 
-async function processFileToPDF(file) {
-  const { buffer, originalname } = file;
-  let ext = path.extname(originalname).toLowerCase();
-  if (!ext) {
-     const validExtensions = ['.png', '.jpeg', '.jpg', '.txt', '.doc', '.docx', '.xls', '.xlsx'];
-     if (validExtensions.includes('.' + originalname.toLowerCase())) ext = '.' + originalname.toLowerCase();
-     else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ext = '.xlsx';
-     else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ext = '.docx';
+async function processFileToPDF(filesInput) {
+  const files = Array.isArray(filesInput) ? filesInput : [filesInput];
+  const mergedPdf = await PDFDocument.create();
+
+  for (const file of files) {
+    const { buffer, originalname } = file;
+    let ext = path.extname(originalname).toLowerCase();
+    
+    if (!ext) {
+       const validExtensions = ['.png', '.jpeg', '.jpg', '.txt', '.doc', '.docx', '.xls', '.xlsx'];
+       if (validExtensions.includes('.' + originalname.toLowerCase())) ext = '.' + originalname.toLowerCase();
+       else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ext = '.xlsx';
+       else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ext = '.docx';
+    }
+    
+    let currentPdfBytes;
+    if (['.png', '.jpeg', '.jpg'].includes(ext)) {
+      currentPdfBytes = await convertImageToPDF(ext, buffer);
+    } else if (ext === '.txt') {
+      currentPdfBytes = await convertTextToPDF(buffer.toString('utf8'));
+    } else if (ext === '.docx' || ext === '.doc' || ext === '.xls' || ext === '.xlsx') {
+      currentPdfBytes = await convertOfficeToPDF(buffer);
+    } else {
+      throw new Error(`Tipo de archivo no listado para conversión: ${originalname}`);
+    }
+
+    const docToMerge = await PDFDocument.load(currentPdfBytes);
+    const copiedPages = await mergedPdf.copyPages(docToMerge, docToMerge.getPageIndices());
+    copiedPages.forEach((page) => mergedPdf.addPage(page));
   }
   
-  if (['.png', '.jpeg', '.jpg'].includes(ext)) {
-    return convertImageToPDF(ext, buffer);
-  } else if (ext === '.txt') {
-    return convertTextToPDF(buffer.toString('utf8'));
-  } else if (ext === '.docx' || ext === '.doc' || ext === '.xls' || ext === '.xlsx') {
-    return await convertOfficeToPDF(buffer);
-  }
-  
-  throw new Error('Tipo de archivo no listado para conversión');
+  return await mergedPdf.save();
 }
 
 async function convertOfficeToPDF(buffer) {
